@@ -1,0 +1,477 @@
+# #     count = 0
+# #     max_attempts = 3
+
+# #     while count < max_attempts:
+# #         retrieve_data = st.text_input("Do you want to retrieve your stored data? (yes/no) ").strip()
+
+# #         if retrieve_data.lower() == 'yes':
+# #             entered_passkey = st.text_input("Enter pass key: ")
+# #             entered_hashed_key = hash_pass_key(entered_passkey)
+    
+# #             if entered_hashed_key == secure_data[data_name]['pass_key']:
+# #                 retrieved_data = decrypt_data(secure_data[data_name]['encrypted_text'], key)
+# #                 st.success(f"Decrypted data: {retrieved_data}")
+# #                 break
+# #             else:
+# #                 count += 1
+# #                 st.error(f"Invalid passkey! Attempt {count} of {max_attempts}.")
+# #         else:
+# #             st.write("Exiting without retrieving data.")
+# #             break
+
+
+# #     if count == max_attempts:
+# #         st.error("Maximum attempts reached. Please try again later.")
+
+# # elif choice == "Login":
+# #     st.text_input("Enter a master password: ")
+
+
+
+
+# elif choice == "Save Data":
+#     user_name = st.text_input("Enter user name: ")
+#     pass_key = st.text_input("Enter a pass key: ", type="password")
+#     data_name = st.text_input("Enter a data name: ")
+#     user_data = st.text_input("Enter your data to store: ")
+
+#     if st.button("Save"):
+#         if user_name and pass_key and data_name and user_data:
+#             hashed_key = hash_pass_key(pass_key)
+#             encrypted_data = encrypt_data(user_data, st.session_state.key)
+
+#             # Load existing data
+#             if os.path.exists(file_path):
+#                 with open(file_path, 'r') as f:
+#                     all_data = json.load(f)
+#             else:
+#                 all_data = {}
+
+#             # If new user, create user record
+#             if user_name not in all_data:
+#                 all_data[user_name] = {
+#                     "pass_key": hashed_key,
+#                     "data": {}
+#                 }
+#             else:
+#                 # Check if passkey matches
+#                 if all_data[user_name]["pass_key"] != hashed_key:
+#                     st.error("Wrong password for this user!")
+#                     st.stop()
+
+#             # Add/Update encrypted data for this user
+#             all_data[user_name]["data"][data_name] = {
+#                 "encrypted_text": encrypted_data.decode()
+#             }
+
+#             # Save back to file
+#             with open(file_path, 'w') as f:
+#                 json.dump(all_data, f)
+
+#             st.success("Data encrypted and saved successfully.")
+#         else:
+#             st.warning("Please fill all fields.")
+
+
+
+
+
+# phla code
+
+# import streamlit as st
+# import hashlib
+# from cryptography.fernet import Fernet
+# import json
+# import os
+# import time
+
+# lockout_file = "lockout_info.json"
+# user_db_file = "user.json"
+# max_attempts = 3
+# lockout_time = 60     # seconds
+
+# st.set_page_config(page_title="Encrypted System", page_icon="🔒",)
+
+# st.title("🔒 Secure Data Encryption System")
+
+# if "secure_data" not in st.session_state:
+#     st.session_state.secure_data = {}
+
+# if "key" not in st.session_state:
+#     st.session_state.key = Fernet.generate_key()
+
+# def hash_pass_key(pass_key, salt=b'static_salt', iteration=100000):
+#     return hashlib.pbkdf2_hmac('sha256', pass_key.encode(), salt, iteration).hex()
+
+# def encrypt_data(user_data, key):
+#     fernet = Fernet(key)
+#     return fernet.encrypt(user_data.encode())
+
+# def decrypt_data(encrypt_data, key):
+#     fernet = Fernet(key)
+#     return fernet.decrypt(encrypt_data).decode()
+
+# file_path = "secured_data.json"
+
+# menu = ["Home", "Save Data", "Retrieve Data" "Login"]
+# choice = st.sidebar.selectbox("Menu", menu)
+
+# if choice == "Home":
+#     st.write("Secure and retrieve your data using this encrypted system..!")
+#     st.subheader("Create your account")
+#     st.text_input("User Name: ")
+#     password = st.text_input("Password: ", type="password")
+#     confirm_password = st.text_input("Confirm Password: ", type="password")
+#     if st.button('create'):
+#         if password == confirm_password:
+#             st.success("Account created successfully.")
+#         else:
+#             st.error("Incorrect Password.")
+
+# elif choice == "Save Data":
+#     user_name = st.text_input("Enter user name: ")
+#     pass_key = st.text_input("Enter a pass key: ", type="password")
+#     data_name = st.text_input("Enter a data name: ")
+#     user_data = st.text_input("Enter your data to store: ")
+  
+#     if st.button("Save"):
+#         if user_name and pass_key and data_name and user_data:
+#             hashed_key = hash_pass_key(pass_key)
+#             encrypted_data = encrypt_data(user_data, st.session_state.key)
+
+#             if os.path.exists(file_path):
+#                 with open(file_path, 'r') as f:
+#                     all_data = json.load(f)
+#             else:
+#                 all_data = {}
+
+#             st.session_state.secure_data[data_name] = {
+#                 'encrypted_text': encrypted_data.decode(),            # Fix: Convert encrypted text to string while saving:
+#                 'pass_key': hashed_key,
+#                 'user_name': user_name,
+#             }
+
+#             with open(file_path, 'w') as f:
+#                 json.dump(st.session_state.secure_data, f)           # save data in json
+
+#             st.success("Data encrypted and save successfully.")
+#         else: 
+#             st.warning("Please fill all fields.")
+
+# elif choice == "Retrieve Data":
+#     if os.path.exists(file_path):
+#         with open(file_path, 'r') as f:
+#             secure_data = json.load(f)
+#     else:
+#         secure_data = {}
+
+#     data_name = st.text_input("Enter your data name: ")
+#     entered_passkey = st.text_input("Enter your pass key: ", type="password")
+
+#     if st.button("Retrieve"):
+#         if os.path.exists(lockout_file):
+#             with open(lockout_file, 'r') as f:
+#                 lockout_data = json.load(f)
+#         else:
+#             lockout_data = {}
+
+#         user_attempts = lockout_data.get(data_name, {"attempts": 0, "lockout_time": 0})
+#         current_time = time.time()
+
+#         if user_attempts["attempts"] >= max_attempts:
+#             if current_time - user_attempts["lockout_time"] < lockout_time:
+#                 st.error("Too many failed attempts. Please wait and try again later.")
+#                 st.stop()
+#             else:
+#                 user_attempts = {"attempts": 0, "lockout_time": 0}
+
+#         if data_name in secure_data:                             # Fix: Retrieve block me bas secure_data (file data) use karo:
+#             entered_hashed_key = hash_pass_key(entered_passkey)
+#             stored_info = secure_data[data_name]                          #  Fix: Retrieve block me bas secure_data (file data) use karo:
+
+#             if entered_hashed_key == stored_info['pass_key']:
+#                 lockout_data[data_name] = {"attempts": 0, "lockout_time": 0}
+#                 with open(lockout_file, 'w') as f:
+#                     json.dump(lockout_data, f)
+
+#                 decrypted_data = decrypt_data(stored_info['encrypted_text'].encode(), st.session_state.key)        # And convert it back to bytes while decrypting:
+#                 # st.success(f"Decrypted Data: {decrypted_data}")
+#                 st.success("Your data was decrypted successfully!")
+#                 st.code(decrypted_data, language='text')
+#             else:
+#                 user_attempts["attempts"] += 1
+#                 if user_attempts["attempts"] >= max_attempts:
+#                     user_attempts["lockout_time"] = current_time
+#                 lockout_data[data_name] = user_attempts
+
+#                 with open(lockout_file, 'w') as f:
+#                     json.dump(lockout_data, f)
+
+#                 st.error(f"Invalid pass key! Attempt {user_attempts['attempts']} of {max_attempts}")
+#         else:
+#             st.error("Data not found.")
+
+
+
+
+
+
+# elif choice == "Login":
+#     st.text_input("User Name: ")
+#     st.text_input("Password: ", type="password")
+    
+
+
+   # if os.path.exists(file_path):
+    #     with open(file_path, 'r') as f:
+    #         try:
+    #             existing_user = json.load(f)
+    #         except json.JSONDecodeError:
+    #             existing_user = {}
+    # else:
+    #     existing_user = {}
+
+    # else:
+    #     existing_user = {}
+
+    #     elif user_name and password == confirm_password:
+    #         hashed_pass = hash_pass_key(password)
+
+    #         st.session_state.secure_data[user_name] = {
+    #             'password': hashed_pass,
+    #         },
+
+    #         existing_user.update(user_name)
+    #     st.success("Account created successfully.")
+
+    # with open(file_path, 'w') as f:
+    #     json.dump(existing_user, f)
+
+    # st.success("Account created successfully.")
+
+    # if st.button("Login"):
+    #     st.session_state.choice = "Login"
+
+
+
+## updated code
+# import streamlit as st
+# import hashlib
+# from cryptography.fernet import Fernet
+# import json
+# import os
+# import time
+
+# lockout_file = "lockout_info.json"
+# user_db_file = "user.json"
+# max_attempts = 3
+# lockout_time = 60     # seconds
+
+# st.set_page_config(page_title="Encrypted System", page_icon="🔒",)
+
+# st.title("🔒 Secure Data Encryption System")
+
+# if "secure_data" not in st.session_state:
+#     st.session_state.secure_data = {}
+
+# if "login" not in st.session_state:
+#     st.session_state.login = False
+
+# if "key" not in st.session_state:
+#     st.session_state.key = Fernet.generate_key()
+
+# def hash_pass_key(pass_key, salt=b'static_salt', iteration=100000):
+#     return hashlib.pbkdf2_hmac('sha256', pass_key.encode(), salt, iteration).hex()
+
+# def encrypt_data(user_data, key):
+#     fernet = Fernet(key)
+#     return fernet.encrypt(user_data.encode())
+
+# def decrypt_data(encrypt_data, key):
+#     fernet = Fernet(key)
+#     return fernet.decrypt(encrypt_data).decode()
+
+# file_path = "secured_data.json"
+
+# menu = ["Home", "Save Data", "Retrieve Data", "Login"]
+# choice = st.sidebar.selectbox("Menu", menu)
+
+# if choice == "Home":
+#     st.write("Secure and retrieve your data using this encrypted system..!")
+
+#     st.subheader("Create your account")
+#     user_name = st.text_input("User Name: ")
+#     password = st.text_input("Password: ", type="password")
+#     confirm_password = st.text_input("Confirm Password: ", type="password")
+
+#     if st.button('create account'):
+#         if password != confirm_password:
+#             st.error("Password do not match.")
+
+#         else:
+#             try:
+#                 with open(file_path, 'r') as f:
+#                     existing_user = json.load(f)
+#             except FileNotFoundError:
+#                 existing_user = {}
+
+#             if user_name in existing_user:
+#                 st.error("Username already exists!")
+
+#             else:
+#                 hashed_pass = hash_pass_key(password)
+#                 new_user = {
+#                     user_name: {
+#                         'password': hashed_pass,
+#                         'data': {}
+#                     }
+#                 }
+
+#                 existing_user.update(new_user)
+
+#                 with open(file_path, 'w') as f:
+#                     json.dump(existing_user, f)
+
+#                 st.session_state.secure_data = existing_user
+#                 st.success("Account created successfully.")
+#                 st.session_state.login = True
+
+# elif choice == "Login":
+#     user_name = st.text_input("User Name: ")
+#     password = st.text_input("Password: ")
+
+#     if st.button("Login"):
+#         try:
+#             with open(file_path, 'r') as f:
+#                 user_data = json.load(f)
+#         except FileNotFoundError:
+#             user_data = {}
+
+#         if user_name not in user_data:
+#             st.error("Account not found")
+#         else:
+#             user_info = user_data[user_name]
+#             stored_hash = user_info['password']
+#             entered_hash = hash_pass_key(password)
+        
+#         if entered_hash == stored_hash:
+#             st.session_state.login = True
+#             st.session_state.current_user = user_name
+#             st.session_state.user_data = user_info.get('data', {})
+#             st.success("Login successfully!")
+#         else:
+#             st.error("Incorrect password")
+
+
+            
+
+# elif choice == "Save Data":
+#     user_data = st.text_input("Enter your data to store: ")
+#     pass_key = st.text_input("Enter a pass key: ", type="password")
+
+#     if st.button("Save"):
+#         if st.session_state.login:
+#             hashed_key = hash_pass_key(pass_key)
+#             encrypted_data = encrypt_data(user_data, st.session_state.key)
+
+#             try:
+#                 with open(file_path, 'r') as f:
+#                     user_data = json.load(f)
+#             except FileNotFoundError:
+#                 user_data = {}
+                
+#                 st.session_state.secure_data = {
+#                     'user_name': user_data['user_name'],
+#                     'encrypted_text': encrypted_data.decode(),            # Fix: Convert encrypted text to string while saving:
+#                     'pass_key': hashed_key,
+#                 }
+
+#                 with open(file_path, 'w') as f:
+#                     json.dump(st.session_state.secure_data, f)
+
+#                 st.success("Data encrypted and save successfully.")
+#         else: 
+#             st.warning("Please fill all fields.")
+
+
+
+        # if user_name and pass_key and data_name and user_data:
+        #     hashed_key = hash_pass_key(pass_key)
+        #     encrypted_data = encrypt_data(user_data, st.session_state.key)
+
+        #     if os.path.exists(file_path):
+        #         with open(file_path, 'r') as f:
+        #             all_data = json.load(f)
+        #     else:
+        #         all_data = {}
+
+        #     st.session_state.secure_data[data_name] = {
+        #         'encrypted_text': encrypted_data.decode(),            # Fix: Convert encrypted text to string while saving:
+        #         'pass_key': hashed_key,
+        #         'user_name': user_name,
+        #     }
+
+        #     with open(file_path, 'w') as f:
+        #         json.dump(st.session_state.secure_data, f)           # save data in json
+
+        #     st.success("Data encrypted and save successfully.")
+        # else: 
+        #     st.warning("Please fill all fields.")
+
+# elif choice == "Retrieve Data":
+#     if os.path.exists(file_path):
+#         with open(file_path, 'r') as f:
+#             secure_data = json.load(f)
+#     else:
+#         secure_data = {}
+
+#     data_name = st.text_input("Enter your data name: ")
+#     entered_passkey = st.text_input("Enter your pass key: ", type="password")
+
+#     if st.button("Retrieve"):
+#         if os.path.exists(lockout_file):
+#             with open(lockout_file, 'r') as f:
+#                 lockout_data = json.load(f)
+#         else:
+#             lockout_data = {}
+
+#         user_attempts = lockout_data.get(data_name, {"attempts": 0, "lockout_time": 0})
+#         current_time = time.time()
+
+#         if user_attempts["attempts"] >= max_attempts:
+#             if current_time - user_attempts["lockout_time"] < lockout_time:
+#                 st.error("Too many failed attempts. Please wait and try again later.")
+#                 st.stop()
+#             else:
+#                 user_attempts = {"attempts": 0, "lockout_time": 0}
+
+#         if data_name in secure_data:                             # Fix: Retrieve block me bas secure_data (file data) use karo:
+#             entered_hashed_key = hash_pass_key(entered_passkey)
+#             stored_info = secure_data[data_name]                          #  Fix: Retrieve block me bas secure_data (file data) use karo:
+
+#             if entered_hashed_key == stored_info['pass_key']:
+#                 lockout_data[data_name] = {"attempts": 0, "lockout_time": 0}
+#                 with open(lockout_file, 'w') as f:
+#                     json.dump(lockout_data, f)
+
+#                 decrypted_data = decrypt_data(stored_info['encrypted_text'].encode(), st.session_state.key)        # And convert it back to bytes while decrypting:
+#                 # st.success(f"Decrypted Data: {decrypted_data}")
+#                 st.success("Your data was decrypted successfully!")
+#                 st.code(decrypted_data, language='text')
+#             else:
+#                 user_attempts["attempts"] += 1
+#                 if user_attempts["attempts"] >= max_attempts:
+#                     user_attempts["lockout_time"] = current_time
+#                 lockout_data[data_name] = user_attempts
+
+#                 with open(lockout_file, 'w') as f:
+#                     json.dump(lockout_data, f)
+
+#                 st.error(f"Invalid pass key! Attempt {user_attempts['attempts']} of {max_attempts}")
+#         else:
+#             st.error("Data not found.")
+
+# elif choice == "Login":
+#     st.text_input("User Name: ")
+#     st.text_input("Password: ", type="password")
+    
